@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  profileImage  String?
+  googleId      String    @unique
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  challenges    UserChallenge[]
+  entries       Entry[]
+
+  @@map("users")
+}
+
+model Challenge {
+  id          Int       @id @default(autoincrement())
+  day         Int       @unique
+  title       String
+  description String
+  icon        String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userChallenges UserChallenge[]
+
+  @@map("challenges")
+}
+
+model UserChallenge {
+  id          String    @id @default(uuid())
+  userId      String
+  challengeId Int
+
+  status      ChallengeStatus @default(NOT_STARTED)
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  entries     Entry[]
+
+  @@unique([userId, challengeId])
+  @@map("user_challenges")
+}
+
+model Entry {
+  id                String    @id @default(uuid())
+  userId            String
+  userChallengeId   String
+
+  content           String    @db.Text
+  imageUrls         String[]
+  mood              String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userChallenge     UserChallenge  @relation(fields: [userChallengeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userChallengeId])
+  @@map("entries")
+}
+
+enum ChallengeStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
