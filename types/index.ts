@@ -1,4 +1,16 @@
 
+import "next-auth"
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string
+      name?: string | null
+      email?: string | null
+      image?: string | null
+    }
+  }
+}
 // 챌린지 타입
 export interface Challenge {
     id: number;
